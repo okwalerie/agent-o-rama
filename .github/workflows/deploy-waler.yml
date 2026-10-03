@@ -1,0 +1,25 @@
+name: Deploy to waler
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: waler-aor
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Repo-scoped runner that lives only on waler. Never runs for PRs.
+    if: github.repository == 'okwalerie/agent-o-rama'
+    runs-on: [self-hosted, Linux, X64, waler-aor]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build release and swap the UI
+        run: scripts/waler/deploy.sh

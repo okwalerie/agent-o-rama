@@ -1,4 +1,6 @@
 (def VERSION (.trim (slurp "VERSION")))
+;; Heap for project JVMs; CI on small hosts sets AOR_LEIN_HEAP (e.g. 3g).
+(def HEAP (or (System/getenv "AOR_LEIN_HEAP") "6g"))
 
 (defproject com.rpl/agent-o-rama VERSION
   :source-paths ["src/clj" "src/cljs" "resource"]
@@ -6,8 +8,8 @@
   :aot [com.rpl.agent-o-rama.impl.ui.launch]
   :test-paths ["test/clj"]
   :jvm-opts ["-Xss6m"
-             "-Xms6g"
-             "-Xmx6g"
+             ~(str "-Xms" HEAP)
+             ~(str "-Xmx" HEAP)
              "-XX:+UseG1GC"
              "-XX:MetaspaceSize=500000000"
              ;; Ensure stack traces are not elided
@@ -64,8 +66,8 @@
                                               "examples/clj/test"]
                           :java-source-paths ["src/java" "test/java"]
                           :jvm-opts          ["-Xss6m"
-                                              "-Xms6g"
-                                              "-Xmx6g"]
+                                              ~(str "-Xms" HEAP)
+                                              ~(str "-Xmx" HEAP)]
                           :dependencies
                           [[meander/epsilon "0.0.650"]
                            [dev.langchain4j/langchain4j-open-ai "1.18.1"]

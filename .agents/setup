@@ -53,6 +53,29 @@ install_lein() {
   lein version
 }
 
+install_bws() {
+  local version=2.1.0
+  local checksum=ba8233c3a4aee5d43e3c73bbd04d99e9bc5aba13bbbfd06d89b073abe732b860
+  local target="$HOME/.local/bin/bws" tmp archive
+  if [[ -x "$target" && "$("$target" --version)" == "bws $version" ]]; then
+    echo "Bitwarden Secrets Manager CLI $version already installed."
+    return
+  fi
+  [[ "$(uname -s)" == Linux && "$(uname -m)" == x86_64 ]] || {
+    echo 'Unsupported bws platform (expected Linux x86_64).' >&2
+    return 1
+  }
+  tmp="$(mktemp -d)"
+  archive="bws-x86_64-unknown-linux-gnu-$version.zip"
+  curl -fsSL "https://github.com/bitwarden/sdk-sm/releases/download/bws-v$version/$archive" -o "$tmp/$archive"
+  printf '%s  %s\n' "$checksum" "$tmp/$archive" | sha256sum -c -
+  unzip -p "$tmp/$archive" bws > "$tmp/bws"
+  chmod +x "$tmp/bws"
+  mv "$tmp/bws" "$target"
+  rm -rf "$tmp"
+  "$target" --version
+}
+
 install_profile() {
   local marker='# agent-o-rama orb toolchain'
   if ! grep -Fqx "$marker" "$HOME/.bash_profile" 2>/dev/null; then
@@ -83,6 +106,7 @@ cd "$repo_root"
 step 'Install Java 21' install_java
 step 'Install Node 20' install_node
 step 'Install Leiningen' install_lein
+step 'Install Bitwarden Secrets Manager CLI' install_bws
 step 'Activate toolchain in login shells' install_profile
 step 'Resolve Leiningen dependencies' lein deps
 step 'Resolve UI dependencies' lein with-profile +ui deps

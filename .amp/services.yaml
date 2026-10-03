@@ -4,7 +4,7 @@ services:
       mkdir -p resource/public &&
       cp -r resource/assets/. resource/public/ &&
       NODE_ENV=production lein with-profile +ui run -m shadow.cljs.devtools.cli release :frontend &&
-      lein with-profile +dev,+ui run -m ci-playwright-setup --no-frontend
+      _JAVA_OPTIONS='-Xms512m -Xmx3g' lein with-profile +dev,+ui run -m ci-playwright-setup --no-frontend
     port: 1974
     health: /
     portal:

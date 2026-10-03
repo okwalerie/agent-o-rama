@@ -31,13 +31,14 @@ podman build --tag "$BUILD_IMAGE" "$HERE"
 mkdir -p "$RAMA/build/m2" "$RAMA/build/npm" "$RELEASES"
 
 # Unzip inside the container so the release gets the shared (:z) SELinux label
-# rama-aor can read. AOR_LEIN_HEAP keeps lein's JVMs from taking 6g next to Rama.
+# rama-aor can read. _JAVA_OPTIONS overrides project.clj's -Xms6g/-Xmx6g (it is
+# applied after command-line flags) so lein's JVMs fit next to Rama.
 podman run --rm \
   -v "$SRC:/src:z" \
   -v "$RAMA/build/m2:/root/.m2:z" \
   -v "$RAMA/build/npm:/root/.npm:z" \
   -v "$RELEASES:/releases:z" \
-  -e AOR_LEIN_HEAP=3g \
+  -e _JAVA_OPTIONS='-Xms256m -Xmx3g' \
   -e INCOMING="$incoming" \
   -w /src "$BUILD_IMAGE" \
   bash -euo pipefail -c '

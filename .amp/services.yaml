@@ -1,0 +1,12 @@
+services:
+  agent-o-rama:
+    command: >-
+      mkdir -p resource/public &&
+      cp -r resource/assets/. resource/public/ &&
+      NODE_ENV=production lein with-profile +ui run -m shadow.cljs.devtools.cli release :frontend &&
+      lein with-profile +dev,+ui run -m ci-playwright-setup --no-frontend
+    port: 1974
+    health: /
+    portal:
+      title: Agent-o-rama
+      description: Development UI backed by an in-process Rama cluster.

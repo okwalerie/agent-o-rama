@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+mkdir -p "$HOME/.cache/amp/logs" "$HOME/.local/bin" "$HOME/.local/share"
+exec > >(tee -a "$HOME/.cache/amp/logs/setup.log") 2>&1
+
+step() {
+  local label="$1" start=$SECONDS
+  shift
+  printf '\n==> %s\n' "$label"
+  "$@"
+  printf '<== %s (%ss)\n' "$label" "$((SECONDS - start))"
+}
+
+install_java() {
+  local target="$HOME/.local/share/temurin-21" tmp
+  if [[ ! -x "$target/bin/javac" ]]; then
+    tmp="$(mktemp -d)"
+    curl -fsSL 'https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/jdk/hotspot/normal/eclipse' -o "$tmp/jdk.tar.gz"
+    mkdir -p "$tmp/jdk"
+    tar -xzf "$tmp/jdk.tar.gz" -C "$tmp/jdk" --strip-components=1
+    mv "$tmp/jdk" "$target"
+    rm -rf "$tmp"
+  fi
+  export JAVA_HOME="$target"
+  export PATH="$JAVA_HOME/bin:$PATH"
+  java -version
+}
+
+install_node() {
+  local target="$HOME/.local/share/node-v20.19.5" tmp
+  if [[ ! -x "$target/bin/npm" ]]; then
+    tmp="$(mktemp -d)"
+    curl -fsSL 'https://nodejs.org/dist/v20.19.5/node-v20.19.5-linux-x64.tar.xz' -o "$tmp/node.tar.xz"
+    mkdir -p "$tmp/node"
+    tar -xJf "$tmp/node.tar.xz" -C "$tmp/node" --strip-components=1
+    mv "$tmp/node" "$target"
+    rm -rf "$tmp"
+  fi
+  export PATH="$target/bin:$PATH"
+  node --version
+}
+
+install_lein() {
+  local target="$HOME/.local/bin/lein"
+  if [[ ! -x "$target" ]]; then
+    curl -fsSL 'https://raw.githubusercontent.com/technomancy/leiningen/2.12.0/bin/lein' -o "$target.tmp"
+    chmod +x "$target.tmp"
+    mv "$target.tmp" "$target"
+  fi
+  export PATH="$HOME/.local/bin:$PATH"
+  lein version
+}
+
+install_profile() {
+  local marker='# agent-o-rama orb toolchain'
+  if ! grep -Fqx "$marker" "$HOME/.bash_profile" 2>/dev/null; then
+    cat >> "$HOME/.bash_profile" <<EOF
+
+$marker
+if [[ "\$PWD" == "$repo_root" || "\$PWD" == "$repo_root/"* ]]; then
+  export JAVA_HOME="\$HOME/.local/share/temurin-21"
+  export PATH="\$HOME/.local/bin:\$HOME/.local/share/node-v20.19.5/bin:\$JAVA_HOME/bin:\$PATH"
+fi
+EOF
+  fi
+}
+
+install_npm_deps() {
+  local fingerprint
+  fingerprint="$(sha256sum package-lock.json | cut -d' ' -f1)-$(node --version)"
+  if [[ -f node_modules/.orb-deps-hash && -x node_modules/.bin/shadow-cljs ]] &&
+     [[ "$(cat node_modules/.orb-deps-hash)" == "$fingerprint" ]]; then
+    echo 'Locked npm dependencies already installed.'
+  else
+    npm ci --no-audit --no-fund
+    printf '%s\n' "$fingerprint" > node_modules/.orb-deps-hash
+  fi
+}
+
+cd "$repo_root"
+step 'Install Java 21' install_java
+step 'Install Node 20' install_node
+step 'Install Leiningen' install_lein
+step 'Activate toolchain in login shells' install_profile
+step 'Resolve Leiningen dependencies' lein deps
+step 'Resolve UI dependencies' lein with-profile +ui deps
+step 'Install locked npm dependencies' install_npm_deps
+step 'Install Playwright Chromium' npx playwright install chromium
+echo 'Orb setup complete.'

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# No authentication or service repair is required; dependency installation belongs in setup.
+for tool in java lein node npm; do
+  command -v "$tool" >/dev/null || { echo "Missing orb tool: $tool" >&2; exit 1; }
+done
+[[ "$(java -version 2>&1)" == *'version "21.'* ]]
+[[ "$(node --version)" == v20.* ]]

@@ -53,3 +53,4 @@ playwright-report/
 
 # local UI capture outputs
 dev/screenshots/
+.amp/portals/*

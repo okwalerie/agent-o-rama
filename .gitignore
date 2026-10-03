@@ -37,6 +37,7 @@ resource/public/manifest.edn
 
 # claude files
 CLAUDE.md
+AGENTS.md
 .claude/settings.local.json
 
 # clojure-mcp

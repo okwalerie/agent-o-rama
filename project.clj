@@ -22,7 +22,7 @@
   :dependencies [[com.rpl/rama-helpers "0.10.0" :exclusions [org.clojure/clojure]]
                  [com.github.f4b6a3/uuid-creator "6.1.1"]
                  [dev.langchain4j/langchain4j
-                  "1.18.1"
+                  "1.21.0"
                   :exclusions
                   [org.slf4j/slf4j-api]]
                  [com.networknt/json-schema-validator
@@ -68,9 +68,9 @@
                                               "-Xmx6g"]
                           :dependencies
                           [[meander/epsilon "0.0.650"]
-                           [dev.langchain4j/langchain4j-open-ai "1.18.1"]
+                           [dev.langchain4j/langchain4j-open-ai "1.21.0"]
                            [dev.langchain4j/langchain4j-web-search-engine-tavily
-                            "1.8.0-beta15"]
+                            "1.21.0-beta31"]
                            [thheller/shadow-cljs "3.1.7"]
                            [etaoin "1.1.43"]
                            [com.blockether/spel "0.7.11"]

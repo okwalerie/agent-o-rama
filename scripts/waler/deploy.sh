@@ -7,7 +7,8 @@
 # /opt/aor-releases and runs /opt/aor-releases/current/aor. `current` is a
 # relative symlink, so flipping it and restarting rama-aor is the whole deploy.
 # Agent modules are NOT redeployed; they embed the library and need a rebuild +
-# `rama-ctl update` of their own.
+# `rama-ctl update` of their own. The build also runs `lein install` into the
+# shared build/m2, so module builds there (rama-plus-agents) pick up this jar.
 set -euo pipefail
 
 RAMA=/mnt/service-data/rama
@@ -43,6 +44,7 @@ podman run --rm \
   -w /src "$BUILD_IMAGE" \
   bash -euo pipefail -c '
     scripts/build-release.sh
+    lein install
     rm -rf "/releases/$INCOMING"
     unzip -q agent-o-rama-*.zip -d "/releases/$INCOMING"
     mkdir -p "/releases/$INCOMING/logs"'

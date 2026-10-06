@@ -216,7 +216,7 @@
 (ser/extend-8-byte-thaw
  SystemMessage
  [in]
- (SystemMessage. (nippy/thaw-from-in! in)))
+ (SystemMessage. ^String (nippy/thaw-from-in! in)))
 
 (ser/extend-8-byte-freeze
  TextContent

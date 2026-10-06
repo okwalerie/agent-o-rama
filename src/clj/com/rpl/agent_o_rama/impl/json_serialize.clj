@@ -256,7 +256,7 @@
 
 (defmethod json-thaw* (.getName SystemMessage)
   [m]
-  (SystemMessage. (get m "text")))
+  (SystemMessage. ^String (get m "text")))
 
 (extend-protocol JSONFreeze
   TextContent
